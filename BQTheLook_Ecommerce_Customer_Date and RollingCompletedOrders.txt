@@ -1,0 +1,113 @@
+--Practicing with Date Functions, Rolling Completed Orders
+
+--Number of Orders By Status 
+SELECT DISTINCT 
+status 
+, COUNT(order_id) as number_of_orders
+FROM bigquery-public-data.thelook_ecommerce.orders
+GROUP BY status
+ORDER BY number_of_orders DESC
+
+
+--Conveting Date to Time 
+
+SELECT
+created_at
+, CAST(created_at as time) as created_timeonly
+, delivered_at 
+, CAST(delivered_at as time) as delivered_timeonly
+FROM bigquery-public-data.thelook_ecommerce.orders
+WHERE status = 'Complete'
+
+--Average Number Of Hours Before Item gets delivered
+SELECT 
+AVG(nohoursdelivered) as avghoursofdelivery
+FROM (
+
+      SELECT 
+      order_id
+      , num_of_item
+      , created_at
+      , delivered_at
+      , date_diff(delivered_at, created_at,hour) as nohoursdelivered
+      FROM bigquery-public-data.thelook_ecommerce.orders
+      WHERE status = 'Complete')
+     
+
+--Average Number Of Hours Before Item gets delivered by number of items
+SELECT 
+num_of_item
+, AVG(nohoursdelivered) as avghoursofdelivery
+FROM (
+
+      SELECT 
+      order_id
+      , num_of_item
+      , created_at
+      , delivered_at
+      , date_diff(delivered_at, created_at,hour) as nohoursdelivered
+      FROM bigquery-public-data.thelook_ecommerce.orders
+      WHERE status = 'Complete')
+      GROUP BY 1 
+      ORDER BY 1
+
+--Number of Completed Deliveries per Day 
+SELECT 
+CAST(delivered_at as date) as date
+, COUNT(order_id) as no_of_orders
+FROM bigquery-public-data.thelook_ecommerce.orders
+WHERE status = 'Complete'
+GROUP BY 1
+ORDER BY 1 ASC
+
+--Cummulative # of Deliveries Per Day 
+
+With rollingtable AS 
+
+(
+  SELECT
+  CAST(delivered_at as date) as deliverydate
+  , COUNT(order_id) as no_of_orders
+  FROM bigquery-public-data.thelook_ecommerce.orders
+  WHERE status = 'Complete'
+  GROUP BY 1
+)
+
+SELECT 
+deliverydate
+, no_of_orders
+,SUM(no_of_orders) OVER (ORDER BY deliverydate) as cummulativeordersbyday
+FROM rollingtable
+
+
+--Number of Completed Deliveries per Month
+SELECT 
+EXTRACT(YEAR from delivered_at) as year
+, EXTRACT (MONTH from delivered_at) as month
+, COUNT(order_id) as no_of_orders
+FROM bigquery-public-data.thelook_ecommerce.orders
+WHERE status = 'Complete'
+GROUP BY 1,2
+ORDER BY 1 ASC, 2 ASC
+
+--Cummulative # of Deliveries Per Month
+
+WITH rollingordermonth AS
+
+(
+SELECT 
+EXTRACT(YEAR from delivered_at) as year
+, EXTRACT (MONTH from delivered_at) as month
+, COUNT(order_id) as no_of_orders
+FROM bigquery-public-data.thelook_ecommerce.orders
+WHERE status = 'Complete'
+GROUP BY 1,2
+)
+
+SELECT 
+rollingordermonth.YEAR
+, rollingordermonth.MONTH
+, no_of_orders
+,SUM(no_of_orders) OVER (PARTITION BY year ORDER BY month) as cummulativeordersbymonth
+FROM rollingordermonth
+
