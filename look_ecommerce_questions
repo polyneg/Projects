@@ -1,8 +1,39 @@
 Tables: 
-distribution_centers
+
+Users
+Demographics of customers 
+  age brackets 
+  min, max, mean, mode age 
+  gender split 
+  country 
+  by traffic search 
+  when did most join (created an account with the look) by year, quarter- year, month- year 
+  show cummulative joining 
+
+Business Operations
+
+ Time Brackets and average time 
+ Order Created -> Shipped 
+ Shipped -> Delivered 
+ Delivered -> Returned
+ Order Created -> Returned 
+ 
+ Returned Investigation 
+ -> When 
+ -> Where
+ -> Always a specific product 
+ -> Return Rate 
+ -> customer profile?
+
 What distribution center is the busiest (most number of orders)
 Average dispatched orders
 Average dispatched per distribution center
 Status of orders per distribution center 
 Items dispatched per distribution center
+
+Business Sales 
+-> Cost 
+-> Revenue 
+-> Profit 
+-> Average revenue/profit per month 
 
