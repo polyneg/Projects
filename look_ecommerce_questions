@@ -2,8 +2,19 @@ Tables:
 
 Users
 Demographics of customers 
-  age brackets 
-  min, max, mean, mode age 
+
+## age brackets 
+  
+ 
+## min, max, mean of age 
+  SELECT 
+    MIN(age) as min_age
+    , MAX(age) as max_age
+    , AVG(age) as avg_age
+  FROM bigquery-public-data.thelook_ecommerce.users ; 
+  
+  
+  mode and median age 
   gender split 
   country 
   by traffic search 
