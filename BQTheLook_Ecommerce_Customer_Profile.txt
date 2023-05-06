@@ -1,23 +1,36 @@
 --NUMBER OF USERS
 SELECT 
-COUNT(DISTINCT id) as number_of_users
+FORMAT("%'d",COUNT(DISTINCT id)) as number_of_users
 FROM bigquery-public-data.thelook_ecommerce.users
 
 --USERS BY GENDER
 SELECT 
 gender
-, COUNT(DISTINCT id) as number_of_users
+,FORMAT("%'d", COUNT(DISTINCT id)) as number_of_users
 FROM bigquery-public-data.thelook_ecommerce.users
 GROUP BY 1
 
---AGE/AGE RANGE
-SELECT 
-MIN(age)
+--MIN, MAX, AVG AGE
+SELECT
+MAX(age) as max_age
+, MIN(age) as min_age
+, AVG(age) as ave_age
 FROM bigquery-public-data.thelook_ecommerce.users
 
+-- MODE AGE
 SELECT 
-MAX(age)
+age
+, COUNT (DISTINCT (id)) as number_of_customers
 FROM bigquery-public-data.thelook_ecommerce.users
+GROUP BY 1 
+ORDER BY 2 DESC
+LIMIT 1
+
+-- MEDIAN AGE
+SELECT 
+APPROX_QUANTILES(age,2)[OFFSET(1)] AS median_age 
+FROM bigquery-public-data.thelook_ecommerce.users
+
 
 WITH age_table AS 
 (
@@ -57,3 +70,44 @@ traffic_source
 FROM bigquery-public-data.thelook_ecommerce.users
 GROUP BY 1
 ORDER BY 2 DESC
+
+-- NUmber of customers by month + year + cummulative
+WITH customer_counts AS (
+  SELECT
+    EXTRACT(YEAR FROM created_at) AS year,
+    EXTRACT(MONTH FROM created_at) AS month,
+    COUNT(DISTINCT id) AS num_customers
+  FROM
+    bigquery-public-data.thelook_ecommerce.users
+  GROUP BY
+    year,
+    month
+  ORDER BY
+    year,
+    month
+) , cumulative_column AS (
+  SELECT
+    customer_counts.year
+    , customer_counts.month 
+    , num_customers
+    , SUM(num_customers) OVER (PARTITION BY year ORDER BY month) AS cumulative_monthly_total
+    , SUM(num_customers) OVER (PARTITION BY year ORDER BY month ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS cumulative_yearly_total
+  FROM
+   customer_counts
+)
+SELECT
+  customer_counts.year,
+  customer_counts.month,
+  customer_counts.num_customers,
+  cumulative_column.cumulative_monthly_total,
+  cumulative_column.cumulative_yearly_total
+FROM
+  customer_counts
+JOIN
+  cumulative_column
+ON
+  customer_counts.year = cumulative_column.year
+  AND customer_counts.month = cumulative_column.month
+ORDER BY
+  customer_counts.year,
+  customer_counts.month
